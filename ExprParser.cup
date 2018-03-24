@@ -1,0 +1,78 @@
+import java_cup.runtime.Symbol;
+import java.util.*;
+import java.lang.*;
+/* Preliminaries to use the scanner.  */
+scan with {: 
+	return lexer.next_token(); 
+:};
+
+action code {:
+  public static int size = 0;
+  public static Hashtable<String, Integer> labelTable 
+  = new Hashtable<String, Integer>();
+:}
+parser code {: 
+
+  ExprLex lexer;
+
+  public ExprParser(ExprLex lex) {
+      super(lex);
+      lexer = lex;
+  }
+:}; 
+
+/* Terminals (tokens returned by lexer). */
+terminal CLASS, EXTENDS, PUBLIC, STATIC, VOID;
+terminal STRING, NEW, RETURN, INT_TYPE;
+terminal BOOLEAN_TYPE, IF, ELSE, WHILE, EQ;
+terminal AND, OR, LESSTAN, PLUS, MINUS, MULT;
+terminal LENGTH, COMMA, NOT, TRUE, FALSE, THIS;
+terminal ID, LBRACE, RBRACE, INT, LPAREN, RPAREN;
+terminal PRINT, DOT, LBRACKET, RBRACKET, SEMICOLON;
+
+non terminal ArrayList<Instruction> program;
+non terminal ArrayList<Instruction> instruction_list;
+non terminal Instruction label_inst;
+non terminal String instruction;
+
+/* The grammar */
+program ::= CLASS;
+// 			{: RESULT = p; :}
+// 			| 
+// 			{: RESULT = new ArrayList<Instruction>(0); :}
+// 			;
+
+
+// instruction_list ::= label_inst:i instruction_list:il
+// 			{: RESULT = il; il.add(i); 
+// 			:}
+// 			|
+// 			{: RESULT = new ArrayList<Instruction>(0); :}
+// 			;
+
+// label_inst ::=  instruction:result
+//                 {: size++; /*System.out.println(result);*/ RESULT = new Instruction(result); :}
+//                 | ID:imm COLON instruction:result
+//                 {:/*System.out.println(imm + ": " + result);*/
+//                 	labelTable.put(imm.toString(), size);
+//                   size++;
+//                  RESULT = new Instruction(result); :}
+//                 ;
+
+// instruction ::= ROP:op  REG:rd COMMA REG:rs COMMA REG:rt
+// {: RESULT = new String(op+" " + rd+" "+rs+" "+rt); :}
+//                 | IOP:op REG:rt COMMA REG:rs COMMA INT:imm
+//                 {: RESULT = new String(op+" " + rt+" "+rs+" "+imm); :}
+//                 | IOP:op REG:rt COMMA REG:rs COMMA ID:imm
+//                 {: RESULT = new String(op+" " + rt+" "+rs+" "+imm); :}
+//                 | IOPM:op REG:rt COMMA INT:imm LPAREN REG:rs RPAREN
+//                 {: RESULT = new String(op +" "+rt+" "+ imm +" "+rs); :}
+//                 | JOP:op ID:imm
+//                 {: RESULT = new String(op +" "+imm); :}
+//                 | DOP:op REG:rs
+//                 {: RESULT = new String(op +" "+rs); :}
+//                 | HOP:op
+//                 {: RESULT = new String((String)op); :}
+//                 | RAOP:op REG:rt COMMA REG:rs
+//                 {: RESULT = new String(op+" " + rt+" "+rs); :}
+//                 ;
