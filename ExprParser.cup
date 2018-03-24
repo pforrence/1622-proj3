@@ -36,7 +36,20 @@ non terminal Instruction label_inst;
 non terminal String instruction;
 
 /* The grammar */
-program ::= CLASS;
+goal ::= main_class class_declaration_list ;
+{::}
+main_class ::= CLASS ID LBRACE PUBLIC STATIC VOID MAIN LPAREN STRING LBRACKET RBRACKET ID RPAREN LBRACE statement RBRACE RBRACE;
+{::}
+class_declaration_list ::= CLASS ID extends RBRACE var_declaration method_declaration RBRACE;
+{::}
+extends ::= EXTENDS ID
+{::}
+|
+{::}
+;
+var_declaration ::= var_type ID SEMICOLON;
+{::}
+var_type ::= 
 // 			{: RESULT = p; :}
 // 			| 
 // 			{: RESULT = new ArrayList<Instruction>(0); :}
