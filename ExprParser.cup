@@ -49,39 +49,45 @@ non terminal expression
 
 /* The grammar */
 goal ::= main_class:mc class_declaration_list:cdl 
-{:RESULT = MJprogram(mc, cdl);:}
+{:RESULT = Program(mc, cdl);:}
 |
 ;
 
-main_class ::= CLASS ID:imm LBRACE PUBLIC STATIC VOID MAIN LPAREN STRING LBRACKET RBRACKET ID:strname RPAREN LBRACE statement RBRACE RBRACE;
-{:RESULT = MJmain_class(imm, strname);:};
+main_class ::= CLASS ID:imm LBRACE PUBLIC STATIC VOID MAIN LPAREN STRING LBRACKET RBRACKET ID:strname RPAREN LBRACE statement_list:stl RBRACE RBRACE;
+{:RESULT = MainClass(imm, strname, stl);:};
 
 
 class_declaration_list ::= class_declaration:cd class_declaration_list:cdl
-{:RESULT = cdc:}
+{: 
+  if (cdl == null) cdl = new ClassDecList();
+  cdl.addElement(cd);
+  RESULT = cdl; 
+:}
 |
 {: RESULT = new ClassDecList();:}
 ;
-class_declaration ::= CLASS ID:imm extends:e RBRACE var_declaration: vd method_declaration:md RBRACE
-{:RESULT = MJclass(imm, e, vd, md):}
-|
-{::}
+class_declaration_simple ::= CLASS ID:imm RBRACE var_declaration: vd method_declaration:md RBRACE
+{:RESULT = ClassDeclSimple(imm, e, vd, md);:}
 ;
-extends ::= EXTENDS ID
-{:RESULT = MJprogram(mc, cdl);:}
-|
-{::}
+class_declaration_extends ::= CLASS ID:imm extends:e RBRACE var_declaration: vd method_declaration:md RBRACE
+{:RESULT = ClassDeclExtends(imm, e, vd, md);:}
+;
+extends ::= EXTENDS ID:imm
+{:RESULT = imm;:}
 ;
 
-var_declaration_list ::= var_type ID SEMICOLON var_declaration
-{::}
+var_declaration_list ::= var_declaration:vd var_declaration_list:vdl
+{:
+  if (vdl == null) vdl = new VarDecList();
+  vdl.addElement(vd);
+  RESULT = vdl; 
+  :}
 |
-{::}
+{: RESULT = new VarDecList(); :}
 ;
-var_declaration ::= var_type ID SEMICOLON var_declaration
-{::}
-|
-{::}
+
+var_declaration ::= var_type:vt ID:imm SEMICOLON 
+{:RESULT = VarDecl(vt, imm);:}
 ;
 
 var_type ::= BOOLEAN_TYPE 
@@ -93,30 +99,46 @@ var_type ::= BOOLEAN_TYPE
 | ID 
 ;
 
-method_declaration_list ::= method_declaration method_declaration_list
-{::}
+method_declaration_list ::= method_declaration:md method_declaration_list:mdl
+{:  
+  if (mdl == null) mdl = new MethodDecList();
+  mdl.addElement(md);
+  RESULT = mdl; 
+:}
 |
-{::}
-;
-method_declaration ::= PUBLIC var_type ID LPAREN paramater RPAREN LBRACE var_declaration statement RETURN expression SEMICOLON RBRACE
-{::}
-paramater ::= paramater 
-{::}
-| parameter COMMA parameter
-{::}
-|
-{::}
+{: RESULT = new MethodDecList(); :}
 ;
 
-statement_list ::= statement statement_list
-{::}
+method_declaration ::= PUBLIC var_type ID LPAREN paramater_list RPAREN LBRACE var_declaration_list statement_list RETURN expression SEMICOLON RBRACE
+{: RESULT = MethodDecl();:}
+;
+
+paramater_list ::= paramater paramater_list 
+{:
+  if (vdl == null) vdl = new VarDecList();
+  vdl.addElement(vd);
+  RESULT = vdl; 
+  :}
+| 
+{: RESULT = new VarDecList(); :}
+;
+paramater ::= var_type:vt ID:imm COMMA
+{:RESULT = VarDecl(vt, imm);:}
+| var_type:vt ID:imm
+{:RESULT = VarDecl(vt, imm);:}
+;
+
+statement_list ::= statement:st statement_list:stl
+{:
+  if (stl == null) stl = new VarDecList();
+  stl.addElement(st);
+  RESULT = stl; 
+  :}
 |
-{::}
+{: RESULT = new StatementList(); :}
 ;
 
 statement ::= LBRACE statement RBRACE
-{::}
-| statement statement
 {::}
 | IF LPAREN expression RPAREN statement ELSE statement
 {::}
@@ -128,14 +150,16 @@ statement ::= LBRACE statement RBRACE
 {::}
 | ID LBRACKET expression RBRACKET EQ expression SEMICOLON
 {::}
-|
-{::}
 ;
 
-expression_list :: = expression expression_list
-{::}
+expression_list :: = expression:e expression_list:el
+{: 
+  if (el == null) el = new VarDecList();
+  el.addElement(e);
+  RESULT = el; 
+:}
 |
-{::}
+{: RESULT = new ExpressionList(); :}
 ;
 
 expression ::= expression && expression
@@ -173,7 +197,5 @@ expression ::= expression && expression
 | NOT expression
 {::}
 | LPAREN expression RPAREN
-{::}
-|
 {::}
 ;
