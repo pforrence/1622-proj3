@@ -1,0 +1,245 @@
+import java_cup.runtime.Symbol;
+import java.util.*;
+import java.lang.*;
+/* Preliminaries to use the scanner.  */
+scan with {: 
+	return lexer.next_token(); 
+:};
+
+action code {:
+  public static int size = 0;
+  public static Hashtable<String, Integer> labelTable 
+  = new Hashtable<String, Integer>();
+:}
+parser code {: 
+
+  ExprLex lexer;
+
+  public ExprParser(ExprLex lex) {
+      super(lex);
+      lexer = lex;
+  }
+:}; 
+
+/* Terminals (tokens returned by lexer). */
+terminal CLASS, EXTENDS, PUBLIC, STATIC, VOID;
+terminal STRING, NEW, RETURN, INT_TYPE;
+terminal BOOLEAN_TYPE, IF, ELSE, WHILE, EQ;
+terminal AND, LESSTHAN, PLUS, MINUS, MULT;
+terminal LENGTH, COMMA, NOT, TRUE, FALSE, THIS;
+terminal MAIN, LBRACE, RBRACE, LPAREN, RPAREN;
+terminal PRINT, DOT, LBRACKET, RBRACKET, SEMICOLON;
+terminal Integer INT;
+terminal String ID;
+
+non terminal Program goal;
+non terminal MainClass main_class;
+non terminal ClassDeclList class_declaration_list;
+non terminal ClassDecl class_declaration;
+non terminal ClassDeclSimple class_declaration_simple;
+non terminal ClassDeclExtends class_declaration_extends;
+non terminal extend;
+non terminal VarDeclList var_declaration_list;
+non terminal VarDecl var_declaration;
+non terminal Type var_type;
+non terminal MethodDeclList method_declaration_list;
+non terminal MethodDecl method_declaration;
+non terminal VarDecList parameter_list;
+non terminal VarDecl first_parameter;
+non terminal VarDecl parameter;
+non terminal StatementList statement_list;
+non terminal Statement statement;
+non terminal ExpList expression_list;
+non terminal Exp expression;
+non terminal Identifier identifier;
+
+/* Precedence */
+precedence right EQ;
+precedence left AND;
+precedence left LESSTHAN;
+precedence left PLUS, MINUS;
+precedence left MULT;
+precedence right NEW;
+precedence right NOT;
+precedence left DOT, LBRACKET, RBRACKET, LPAREN, RPAREN;
+
+
+/* The grammar */
+goal ::= main_class:mc class_declaration_list:cdl 
+{:RESULT = Program(mc, cdl);:}
+;
+
+main_class ::= CLASS identifier:imm LBRACE PUBLIC STATIC VOID MAIN LPAREN STRING LBRACKET RBRACKET identifier:strname RPAREN LBRACE statement_list:stl RBRACE RBRACE
+{:RESULT = MainClass(imm, strname, stl);:};
+
+
+class_declaration_list ::= class_declaration:cd class_declaration_list:cdl
+{: 
+  if (cdl == null) cdl = new ClassDecList();
+  cdl.addElement(cd);
+  RESULT = cdl; 
+:}
+|
+{: RESULT = new ClassDecList();:}
+;
+class_declaration ::= class_declaration_simple:cds
+{:RESULT = cds; :}
+| class_declaration_extends:cde
+{:RESULT = cde;:}
+;
+
+class_declaration_simple ::= CLASS identifier:imm LBRACE var_declaration_list: vdl method_declaration_list:mdl RBRACE
+{:RESULT = ClassDeclSimple(imm, e, vdl, mdl);:}
+;
+class_declaration_extends ::= CLASS identifier:imm extend:e LBRACE var_declaration_list: vdl method_declaration_list:mdl RBRACE
+{:RESULT = ClassDeclExtends(imm, e, vdl, mdl);:}
+;
+extend ::= EXTENDS identifier:imm
+{:RESULT = imm;:}
+;
+
+var_declaration_list ::= var_declaration_list:vdl var_declaration:vd 
+{:
+  if (vdl == null) vdl = new VarDecList();
+  vdl.addElement(vd);
+  RESULT = vdl; 
+  :}
+|
+{: RESULT = new VarDecList(); :}
+;
+
+var_declaration ::= var_type:vt identifier:imm SEMICOLON 
+{:RESULT = VarDecl(vt, imm);:}
+;
+
+var_type ::= BOOLEAN_TYPE 
+{:RESULT = new BooleanType();:}
+| INT_TYPE
+{:RESULT = new IntegerType();:}
+| INT_TYPE LBRACKET RBRACKET
+{:RESULT = new IntArrayType();:}
+| identifier:imm
+{:RESULT = new IdentifierType(imm.toString());:}
+;
+
+method_declaration_list ::= method_declaration:md method_declaration_list:mdl
+{:  
+  if (mdl == null) mdl = new MethodDecList();
+  mdl.addElement(md);
+  RESULT = mdl; 
+:}
+|
+{: RESULT = new MethodDecList(); :}
+;
+
+method_declaration ::= PUBLIC var_type:vt identifier:imm LPAREN RPAREN LBRACE var_declaration_list:vdl statement_list:stl RETURN expression:e SEMICOLON RBRACE
+{: RESULT = MethodDecl(vt, imm, null, vdl, stl, e);:}
+|PUBLIC var_type:vt identifier:imm LPAREN parameter_list:pl RPAREN LBRACE var_declaration_list:vdl statement_list:stl RETURN expression:e SEMICOLON RBRACE
+{: RESULT = MethodDecl(vt, imm, pl, vdl, stl, e);:}
+;
+
+
+
+parameter_list ::= first_parameter:fp parameter_list:pl
+{:
+  if (pl == null) pl = new VarDecList();
+  pl.addElement(fp);
+  RESULT = pl; 
+:}
+| parameter:p parameter_list:pl
+{:
+  if (pl == null) pl = new VarDecList();
+  pl.addElement(p);
+  RESULT = pl; 
+  :}
+| 
+{: RESULT = new VarDecList(); :}
+;
+
+first_parameter ::= var_type:vt identifier:imm
+{:RESULT = VarDecl(vt, imm);:}
+;
+
+parameter ::= COMMA var_type:vt identifier:imm 
+{:RESULT = VarDecl(vt, imm);:}
+;
+
+
+
+statement_list ::= statement:st statement_list:stl
+{:
+  if (stl == null) stl = new VarDecList();
+  stl.addElement(st);
+  RESULT = stl; 
+  :}
+|
+{: RESULT = new StatementList(); :}
+;
+
+
+
+statement ::= LBRACE statement_list RBRACE
+{::}
+| IF LPAREN expression RPAREN statement ELSE statement
+{::}
+| WHILE LPAREN expression RPAREN statement
+{::} 
+| PRINT LPAREN expression RPAREN statement SEMICOLON
+{::}
+| identifier EQ expression SEMICOLON
+{::}
+| identifier LBRACKET expression RBRACKET EQ expression SEMICOLON
+{::}
+;
+
+expression_list ::= COMMA expression:e expression_list:el
+{: 
+  if (el == null) el = new ExpList();
+  el.addElement(e);
+  RESULT = el; 
+:}
+|
+{: RESULT = new ExpList(); :}
+;
+
+expression ::= expression AND expression
+{::}
+|expression LESSTHAN expression
+{::}
+|expression PLUS expression
+{::}
+|expression MINUS expression
+{::}
+|expression MULT expression
+{::}
+|expression LBRACKET expression RBRACKET
+{::}
+|expression DOT LENGTH
+{::}
+|expression DOT identifier LPAREN RPAREN
+{::}
+|expression DOT identifier LPAREN expression expression_list RPAREN
+{::}
+| INT
+{::}
+| TRUE
+{::}
+| FALSE
+{::}
+| identifier
+{::}
+| THIS
+{::}
+| NEW INT LBRACKET expression RBRACKET
+{::}
+| NEW identifier LPAREN RPAREN
+{::}
+| NOT expression
+{::}
+| LPAREN expression RPAREN
+{::}
+;
+
+identifier ::= ID:imm
+{:RESULT = new Identifier(imm.getValue());:}
+;
