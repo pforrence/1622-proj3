@@ -17,8 +17,6 @@ public class Compiler {
 			ExprParser parser_obj = new ExprParser(new ExprLex(new FileInputStream(args[0])));
 			parse_tree = parser_obj.parse();
 
-			Random rand = new Random();
-
 		} catch (IOException e) {
 			System.err.println("ERROR: Unable to open file: " + args[0]);
 		} catch (Exception e) {

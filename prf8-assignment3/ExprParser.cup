@@ -43,9 +43,9 @@ non terminal VarDecl var_declaration;
 non terminal Type var_type;
 non terminal MethodDeclList method_declaration_list;
 non terminal MethodDecl method_declaration;
-non terminal VarDeclList parameter_list;
-non terminal VarDecl first_parameter;
-non terminal VarDecl parameter;
+non terminal FormalList parameter_list;
+non terminal Formal first_parameter;
+non terminal Formal parameter;
 non terminal StatementList statement_list;
 non terminal Statement statement;
 non terminal ExpList expression_list;
@@ -78,12 +78,12 @@ main_class ::= CLASS identifier:imm LBRACE PUBLIC STATIC VOID MAIN LPAREN STRING
 
 class_declaration_list ::= class_declaration:cd class_declaration_list:cdl
 {: 
-  if (cdl == null) cdl = new ClassDecList();
+  if (cdl == null) cdl = new ClassDeclList();
   cdl.addElement(cd);
   RESULT = cdl; 
 :}
 |
-{: RESULT = new ClassDecList();:}
+{: RESULT = new ClassDeclList();:}
 ;
 class_declaration ::= class_declaration_simple:cds
 {:RESULT = cds; :}
@@ -112,7 +112,7 @@ var_declaration_list ::= var_declaration_list:vdl var_declaration:vd
 ;
 
 var_declaration ::= var_type:vt identifier:imm SEMICOLON 
-{:RESULT = VarDecl(vt, imm);:}
+{:RESULT = new VarDecl(vt, imm);:}
 ;
 
 var_type ::= BOOLEAN_TYPE 
@@ -145,26 +145,26 @@ method_declaration ::= PUBLIC var_type:vt identifier:imm LPAREN RPAREN LBRACE va
 
 parameter_list ::= first_parameter:fp parameter_list:pl
 {:
-  if (pl == null) pl = new VarDeclList();
+  if (pl == null) pl = new FormalList();
   pl.addElement(fp);
   RESULT = pl; 
 :}
 | parameter:p parameter_list:pl
 {:
-  if (pl == null) pl = new VarDeclList();
+  if (pl == null) pl = new FormalList();
   pl.addElement(p);
   RESULT = pl; 
   :}
 | 
-{: RESULT = new VarDeclList(); :}
+{: RESULT = new FormalList(); :}
 ;
 
 first_parameter ::= var_type:vt identifier:imm
-{:RESULT = VarDecl(vt, imm);:}
+{:RESULT = new Formal(vt, imm);:}
 ;
 
 parameter ::= COMMA var_type:vt identifier:imm 
-{:RESULT = VarDecl(vt, imm);:}
+{:RESULT = new Formal(vt, imm);:}
 ;
 
 
