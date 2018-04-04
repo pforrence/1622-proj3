@@ -13,11 +13,15 @@ scan with {:
 parser code {: 
 
   ExprLex lexer;
+  public java_cup.runtime.Symbol currentSymbol;
 
   public ExprParser(ExprLex lex) {
       super(lex);
       lexer = lex;
   }
+    public void syntax_error(Symbol currentToken) {
+      System.err.println("Error at line " + currentToken.left + ", column " + cur_token.right);
+    }
 :}; 
 
 /* Terminals (tokens returned by lexer). */
@@ -187,7 +191,7 @@ statement ::= LBRACE statement_list:stl RBRACE
 {: RESULT  = new If(e, s, s2); :}
 | WHILE LPAREN expression:e RPAREN statement:s
 {: RESULT  = new While(e, s); :} 
-| PRINT LPAREN expression:e RPAREN statement:s SEMICOLON
+| PRINT LPAREN expression:e RPAREN SEMICOLON
 {: RESULT  = new Print(e); :}
 | identifier:imm EQ expression:e SEMICOLON
 {: RESULT  = new Assign(imm, e); :}
@@ -252,7 +256,7 @@ expression ::= expression:e AND expression:e1
 | NOT expression:e
 {: RESULT = new Not(e);:}
 | LPAREN expression:e RPAREN
-{: /*RESULT = new Exp(e);*/ :}
+{: RESULT = e; :}
 ;
 
 identifier ::= ID:imm

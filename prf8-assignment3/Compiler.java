@@ -14,8 +14,13 @@ public class Compiler {
 		Symbol parse_tree = null;
 		try {
 			/*Parsing Phase*/
-			ExprParser parser_obj = new ExprParser(new ExprLex(new FileInputStream(args[0])));
-			parse_tree = parser_obj.parse();
+
+            Reader reader = new java.io.InputStreamReader(new java.io.FileInputStream(args[0]));
+            ExprParser parser = new ExprParser(new ExprLex(reader));
+            parse_tree = parser.parse();
+            
+            Program program = ((Program) parse_tree.value);
+            program.accept(new PrettyPrintVisitor());
 
 		} catch (IOException e) {
 			System.err.println("ERROR: Unable to open file: " + args[0]);
